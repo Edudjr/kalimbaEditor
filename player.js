@@ -4,37 +4,48 @@ createMatrixOnCanvas();
 
 function createMatrixOnCanvas() {
   var main = document.getElementById("myCanvas");
-  var ctx = main.getContext("2d");
-  
   let numberOfElements = 17;
   let canvasHeight = main.offsetHeight;
   let canvasWidth = main.offsetWidth;
   let elementWidth = canvasWidth / numberOfElements;
   let xOffset = yOffset = elementWidth/2;
   
-  var xPosition = xOffset;
-  var yPosition = canvasHeight - yOffset;
-  
+  var xPosition = 0;
+  var yPosition = 0;
+
   for (var i = 0; i < numberOfElements; i++) {
-    createCircleAt(xPosition, yPosition);
+    createSquareAt(xPosition, yPosition)
+    createCircleAt(xPosition + xOffset, yPosition + yOffset);
     xPosition += elementWidth;
   }
 }
 
 function createCircleAt(x, y) {
-  var main = document.getElementById("myCanvas");
-  var ctx = main.getContext("2d");
+  var canvas = document.getElementById("myCanvas");
+  var ctx = canvas.getContext("2d");
   
   let modifier = 0.5;
-  let canvasWidth = main.offsetWidth;
+  let canvasWidth = canvas.offsetWidth;
   let elementWidth = canvasWidth / 17;
-  let elementRadius = elementWidth/2 * modifier;
+  let elementRadius = elementWidth / 2 * modifier;
 
-  
   ctx.beginPath();
   ctx.arc(x, y, elementRadius, 0, 2 * Math.PI);
   ctx.stroke();
 }
+
+function createSquareAt(x, y) {
+  var canvas = document.getElementById("myCanvas");
+  var ctx = canvas.getContext("2d");
+  
+  let canvasWidth = canvas.offsetWidth;
+  let elementWidth = canvasWidth / 17;
+  let elementHeight = elementWidth;
+  
+  ctx.beginPath();
+  ctx.rect(x, y, elementWidth, elementHeight);
+  ctx.stroke();
+} 
 
 function createDebug(matrix) {
   var main = document.getElementById("main");
