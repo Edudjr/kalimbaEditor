@@ -135,10 +135,15 @@ function createFooterSection() {
   let width = height = footer.offsetWidth / numberOfRows;
   let ctx = footer.getContext("2d");
   let currentX = 0;
+  let textOffsetX = width/2;
+  let textOffsetY = height - 5;
+  
+  let notes = ['D','B','G','E','C','A','F','D','C','E','G','B','D','F','A','C','E'];
   
   for (let i = 0; i < numberOfRows; i++) {
     createSquareAt(footer, currentX, 0, width, height);
     colorRectBasedOnPosition(ctx, i, 3, "red");
+    createTextAt(ctx, notes[i], 15, currentX + textOffsetX, textOffsetY);
     currentX += width;
   }
 }
@@ -206,6 +211,13 @@ function createMatrix() {
         }
     }  
     return line;
+}
+
+function createTextAt(ctx, text, size, x, y) {
+  ctx.fillStyle = "black";
+  ctx.font = size+"px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(text, x, y);
 }
 
 // CANVAS CREATION
