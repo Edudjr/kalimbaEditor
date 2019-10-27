@@ -34,11 +34,12 @@ class TabSection {
   _createMatrixOnCanvas() {
     let xPosition = 0;
     let yPosition = 0;
+    let ctx = this.ctx;
 
     for (let i = 0; i < this.numberOfLines; i++) {
       for (let j = 0; j < this.numberOfRows; j++) {
-        this._createSquareAt(xPosition, yPosition);
-        this._colorBasedOnPosition(j);
+        createSquareAt(this.canvas, xPosition, yPosition, this.elementWidth, this.elementHeight);
+        colorRectBasedOnPosition(ctx, j, 3, "red");
         xPosition += this.elementWidth;
         
         if (this.matrix[i][j] == 1) {
@@ -64,25 +65,14 @@ class TabSection {
     return matrix;
   }
   
-  _createSquareAt(x, y) {
-    let canvas = this.canvas;
-    let ctx = this.ctx;
-    let elementWidth = this.elementWidth;
-    let elementHeight = this.elementHeight;
-    
-    ctx.beginPath();
-    ctx.rect(x, y, elementWidth, elementHeight);
-    ctx.stroke();
-  }
-  
-  _colorBasedOnPosition(rowNumber) {
-    let ctx = this.ctx;
-    let row = rowNumber + 1;
-    if (row % 3 == 0) {
-      ctx.fillStyle = "red";
-      ctx.fill();
-    }
-  }
+  // _colorBasedOnPosition(rowNumber) {
+  //   let ctx = this.ctx;
+  //   let row = rowNumber + 1;
+  //   if (row % 3 == 0) {
+  //     ctx.fillStyle = "red";
+  //     ctx.fill();
+  //   }
+  // }
   
   _createCircleWithCoordinate(coordinateArray) {
     let elementWidth = this.elementWidth;
@@ -129,34 +119,45 @@ class TabSection {
   }
 }
 
-let canvas = createCanvas("myCanvas");
-let section = new TabSection(canvas, 4, 17);
+createSection();
+createFooterSection();
 
-let canvasListener = function(e) {
-    let position = getCursorPosition(myCanvas, e);
-    let coordinate = getCoordinatesFromPosition(position);
-    
-    selectPosition(coordinate);
-    clearCanvas(myCanvas);
-    createMatrixOnCanvas(matrix, myCanvas);
+var canvasId = 0;
+function createSection(sectionArray) {
+  let canvas = createCanvas("myCanvas"+canvasId);
+  let section = new TabSection(canvas, 4, 17);
+  canvasId++;
 }
 
-
-function createCanvas(id) {
-  let main = document.getElementById("main");
-  var newNode = document.createElement("canvas");
-  newNode.id = id
-  newNode.setAttribute('width', "425");
-  newNode.setAttribute('height', "100");
-  newNode.style.border = "thin solid #000000";
+function createFooterSection() {
+  let footer = createFooterCanvas("footerCanvas");
+  let numberOfRows = 17;
+  let width = height = footer.offsetWidth / numberOfRows;
+  let ctx = footer.getContext("2d");
+  let currentX = 0;
   
-  var lastCanvas = main.getElementsByTagName("canvas")[0];
-  var parentDiv = lastCanvas.parentNode;
-  
-  parentDiv.insertBefore(newNode, lastCanvas);
+  for (let i = 0; i < numberOfRows; i++) {
+    createSquareAt(footer, currentX, 0, width, height);
+    colorRectBasedOnPosition(ctx, i, 3, "red");
+    currentX += width;
+  }
+}
 
-  let canvas = document.getElementById(id);
-  return canvas;
+// POSITION AND DRAWINGS
+function createSquareAt(canvas, x, y, width, height) {
+  let ctx = canvas.getContext("2d");
+  
+  ctx.beginPath();
+  ctx.rect(x, y, width, height);
+  ctx.stroke();
+}
+
+function colorRectBasedOnPosition(ctx, rowNumber, modNumber, color) {
+  let row = rowNumber + 1;
+  if (row % modNumber == 0) {
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
 }
 
 function getCoordinatesFromPosition(positionArray, elementWidth, elementHeight) {
@@ -205,4 +206,36 @@ function createMatrix() {
         }
     }  
     return line;
+}
+
+// CANVAS CREATION
+function createCanvas(id) {
+  let main = document.getElementById("main");
+  var newNode = document.createElement("canvas");
+  newNode.id = id
+  newNode.setAttribute('width', "425");
+  newNode.setAttribute('height', "100");
+  newNode.style.border = "thin solid #000000";
+  
+  var lastCanvas = main.getElementsByTagName("canvas")[0];
+  var parentDiv = lastCanvas.parentNode;
+  
+  parentDiv.insertBefore(newNode, lastCanvas);
+  return newNode;
+}
+
+function createFooterCanvas(id) {
+  let main = document.getElementById("main");
+  var newNode = document.createElement("canvas");
+  newNode.id = id;
+  newNode.setAttribute('width', "425");
+  newNode.setAttribute('height', "25");
+  newNode.style.border = "thin solid #000000";
+  
+  var allCanvas = main.getElementsByTagName("canvas");
+  var lastCanvas = allCanvas[allCanvas.length -1];
+  var parentDiv = lastCanvas.parentNode;
+  
+  parentDiv.insertBefore(newNode, lastCanvas.nextSibling);
+  return newNode;
 }
