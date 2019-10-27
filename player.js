@@ -1,29 +1,92 @@
-var matrix = createMatrix();
-createDebug(matrix);
+let canvas = document.getElementById("myCanvas");
+let ctx = canvas.getContext("2d");
+let numberOfRows = 17;
+let numberOfLines = 4;
+let canvasHeight = canvas.offsetHeight;
+let canvasWidth = canvas.offsetWidth;
+let elementWidth = canvasWidth / numberOfRows;
+let elementHeight = canvasHeight / numberOfLines;
+
+let matrix = createMatrix();
 createMatrixOnCanvas();
 
-function createMatrixOnCanvas() {
-  var main = document.getElementById("myCanvas");
-  let numberOfElements = 17;
-  let canvasHeight = main.offsetHeight;
-  let canvasWidth = main.offsetWidth;
-  let elementWidth = canvasWidth / numberOfElements;
-  let xOffset = yOffset = elementWidth/2;
-  
-  var xPosition = 0;
-  var yPosition = 0;
 
-  for (var i = 0; i < numberOfElements; i++) {
-    createSquareAt(xPosition, yPosition)
-    createCircleAt(xPosition + xOffset, yPosition + yOffset);
-    xPosition += elementWidth;
+// let canvas = document.getElementById("myCanvas");
+canvas.addEventListener('mousedown', function(e) {
+    let position = getCursorPosition(e);
+    let coordinate = getCoordinatesFromPosition(position);
+    
+    selectPosition(coordinate);
+})
+
+function selectPosition(coordinateArray) {
+  let normalizedPosition = getNormalizedPositionFromCoordinate(coordinateArray);
+  
+  let xOffset = elementWidth/2;
+  let yOffset = elementHeight/2;
+  let x = coordinateArray[0];
+  let y = coordinateArray[1];
+  let normalizedX = normalizedPosition[0] + xOffset;
+  let normalizedY = normalizedPosition[1] + yOffset;
+  
+  createCircleAt(normalizedX, normalizedY);
+  matrix[x][y] = 1;
+  
+  console.log(matrix);
+}
+
+function getCoordinatesFromPosition(positionArray) {
+  let x = positionArray[0];
+  let y = positionArray[1];
+  
+  let currentX = elementWidth;
+  let currentY = elementHeight;
+  
+  let line = 0;
+  let row = 0;
+  
+  while (currentX < x) {
+    currentX += elementWidth;
+    row ++;
+  }
+  
+  while (currentY < y) {
+    currentY += elementHeight;
+    line ++;
+  }
+  
+  return [line, row];
+}
+
+function getNormalizedPositionFromCoordinate(coordinateArray) {
+  let y = coordinateArray[0] * elementHeight;
+  let x = coordinateArray[1] * elementWidth;
+  
+  return [x, y];
+}
+
+function getCursorPosition(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    return [x, y];
+}
+
+function createMatrixOnCanvas() {
+  let xPosition = 0;
+  let yPosition = 0;
+
+  for (let i = 0; i < numberOfLines; i++) {
+    for (let j = 0; j < numberOfRows; j++) {
+      createSquareAt(xPosition, yPosition, j);
+      xPosition += elementWidth;
+    }
+    xPosition = 0
+    yPosition += elementHeight;
   }
 }
 
 function createCircleAt(x, y) {
-  var canvas = document.getElementById("myCanvas");
-  var ctx = canvas.getContext("2d");
-  
   let modifier = 0.5;
   let canvasWidth = canvas.offsetWidth;
   let elementWidth = canvasWidth / 17;
@@ -34,10 +97,7 @@ function createCircleAt(x, y) {
   ctx.stroke();
 }
 
-function createSquareAt(x, y) {
-  var canvas = document.getElementById("myCanvas");
-  var ctx = canvas.getContext("2d");
-  
+function createSquareAt(x, y, rowNumber) {
   let canvasWidth = canvas.offsetWidth;
   let elementWidth = canvasWidth / 17;
   let elementHeight = elementWidth;
@@ -45,20 +105,29 @@ function createSquareAt(x, y) {
   ctx.beginPath();
   ctx.rect(x, y, elementWidth, elementHeight);
   ctx.stroke();
-} 
+  colorBasedOnPosition(ctx, rowNumber);
+}
+
+function colorBasedOnPosition(ctx, rowNumber) {
+  let row = rowNumber + 1;
+  if (row % 3 == 0) {
+    ctx.fillStyle = "red";
+    ctx.fill();
+  }
+}
 
 function createDebug(matrix) {
-  var main = document.getElementById("main");
+  let main = document.getElementById("main");
   main.innerHTML += prettyText(matrix);
 }
 
 function createMatrix() {
-    var line = new Array(4)
+    let line = new Array(4)
     
-    for (var i = 0; i < line.length; i++) {
+    for (let i = 0; i < line.length; i++) {
         line[i] = new Array(17);
       
-        for (var j = 0; j < line[i].length; j++) {
+        for (let j = 0; j < line[i].length; j++) {
             line[i][j] = 0;
         }
     }
@@ -68,8 +137,8 @@ function createMatrix() {
 
 // Helpers
 function prettyText(matrix) {
-  var text = "";
-  for (var i = 0; i < matrix.length; i++) {
+  let text = "";
+  for (let i = 0; i < matrix.length; i++) {
     text += matrix[i]+"</br>";
   }
   return text
