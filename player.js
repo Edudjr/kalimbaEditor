@@ -17,22 +17,19 @@ canvas.addEventListener('mousedown', function(e) {
     let coordinate = getCoordinatesFromPosition(position);
     
     selectPosition(coordinate);
+    clearCanvas();
+    createMatrixOnCanvas();
 })
 
 function selectPosition(coordinateArray) {
-  let normalizedPosition = getNormalizedPositionFromCoordinate(coordinateArray);
-  
-  let xOffset = elementWidth/2;
-  let yOffset = elementHeight/2;
   let x = coordinateArray[0];
   let y = coordinateArray[1];
-  let normalizedX = normalizedPosition[0] + xOffset;
-  let normalizedY = normalizedPosition[1] + yOffset;
   
-  createCircleAt(normalizedX, normalizedY);
-  matrix[x][y] = 1;
-  
-  console.log(matrix);
+  if (matrix[x][y] == 1) {
+    matrix[x][y] = 0;
+  } else {
+    matrix[x][y] = 1;
+  }
 }
 
 function getCoordinatesFromPosition(positionArray) {
@@ -80,10 +77,30 @@ function createMatrixOnCanvas() {
     for (let j = 0; j < numberOfRows; j++) {
       createSquareAt(xPosition, yPosition, j);
       xPosition += elementWidth;
+      
+      if (matrix[i][j] == 1) {
+        createCircleWithCoordinate([i,j]);
+      }
     }
-    xPosition = 0
+    xPosition = 0;
     yPosition += elementHeight;
   }
+}
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function createCircleWithCoordinate(coordinateArray) {
+  let normalizedPosition = getNormalizedPositionFromCoordinate(coordinateArray);
+  let xOffset = elementWidth/2;
+  let yOffset = elementHeight/2;
+  let x = coordinateArray[0];
+  let y = coordinateArray[1];
+  let normalizedX = normalizedPosition[0] + xOffset;
+  let normalizedY = normalizedPosition[1] + yOffset;
+  
+  createCircleAt(normalizedX, normalizedY);
 }
 
 function createCircleAt(x, y) {
@@ -94,7 +111,8 @@ function createCircleAt(x, y) {
 
   ctx.beginPath();
   ctx.arc(x, y, elementRadius, 0, 2 * Math.PI);
-  ctx.stroke();
+  ctx.fillStyle = "black";
+  ctx.fill();
 }
 
 function createSquareAt(x, y, rowNumber) {
