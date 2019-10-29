@@ -106,14 +106,14 @@ class TabSectionUI {
 
     for (let i = 0; i < numberOfLines; i++) {
       for (let j = 0; j < numberOfRows; j++) {
-        this._createRect(xPosition, yPosition);
         this._createRedRectBasedOnRow(xPosition, yPosition, j);
-        xPosition += elementWidth;
-        
+        this._createRect(xPosition, yPosition);
         let isPositionSelected = this.tabSection.isPositionSelected([i,j]);
         if (isPositionSelected) {
           this._createCircleFromPosition(i,j);
         }
+        
+        xPosition += elementWidth;
       }
       xPosition = 0;
       yPosition += this.elementHeight;
@@ -228,8 +228,14 @@ createFooterSection();
 var canvasId = 0;
 
 function createSection() {
-  let canvas = createCanvas("myCanvas"+canvasId);
-  let tabSection = new TabSection(4, 17);
+  let lines = 4;
+  let rows = 17;
+  let squareSize = 25;
+  let width = squareSize * rows;
+  let height = squareSize * lines;
+  let id = "myCanvas" + canvasId;
+  let canvas = createSectionCanvas(id, width, height);
+  let tabSection = new TabSection(lines, rows);
   let tabSectionUI = new TabSectionUI(canvas, tabSection);
   canvasId++;
 }
@@ -238,67 +244,52 @@ function createFooterSection() {
   // TODO: remove everything and do something like
   // new TabSection(1, 17);
   // new TabSectionUI(canvas, TabSection);
+  let lines = 1;
+  let rows = 17;
+  let squareSize = 25;
+  let width = squareSize * rows;
+  let height = squareSize * lines;
   
-  let canvas = createFooterCanvas("footerCanvas");
+  let canvas = createFooterCanvas("footerCanvas", width, height);
   let numberOfRows = 17;
-  let width = height = canvas.offsetWidth / numberOfRows;
+  
   let ctx = canvas.getContext("2d");
   let currentX = 0;
-  let textOffsetX = width/2;
-  let textOffsetY = height - 5;
+  let textOffsetX = squareSize/2;
+  let textOffsetY = squareSize - 5;
 
   // Apply text to each square
   let notes = ['D','B','G','E','C','A','F','D','C','E','G','B','D','F','A','C','E'];
   for (let i = 0; i < numberOfRows; i++) {
-    CanvasDrawingHelper.createRect(canvas, currentX, 0, width, height);
-    CanvasDrawingHelper.createRect(canvas, currentX, 0, width, height, "red");
-    colorRectBasedOnPosition(ctx, i, 3, "red");
+    colorRectBasedOnPosition(canvas, currentX, 0, i, squareSize);
+    CanvasDrawingHelper.createRect(canvas, currentX, 0, squareSize, height, "red");
     CanvasDrawingHelper.createTextAt(canvas, notes[i], 15, currentX + textOffsetX, textOffsetY, "black");
-    currentX += width;
+    currentX += squareSize;
   }
   
-  function colorRectBasedOnPosition(ctx, rowNumber, modNumber, color) {
+  function colorRectBasedOnPosition(canvas, x, y, rowNumber, squareSize) {
+    let width = height = squareSize;
     let row = rowNumber + 1;
-    if (row % modNumber == 0) {
-      ctx.fillStyle = color;
-      ctx.fill();
+    if (row % 3 == 0) {
+      CanvasDrawingHelper.fillRect(canvas, x, y, width, height, "red");
     }
   }
 }
 
-function getCoordinatesFromPosition(positionArray, elementWidth, elementHeight) {
-  let x = positionArray[0];
-  let y = positionArray[1];
-  
-  let currentX = elementWidth;
-  let currentY = elementHeight;
-  
-  let line = 0;
-  let row = 0;
-  
-  while (currentX < x) {
-    currentX += elementWidth;
-    row ++;
-  }
-  
-  while (currentY < y) {
-    currentY += elementHeight;
-    line ++;
-  }
-  
-  return [line, row];
-}
-
 // CANVAS CREATION
 // TODO: make canvas creation depend on tabSection or something else (lines and rows)
-function createCanvas(id) {
+function createCanvasNode(id, width, height) {
   let main = document.getElementById("main");
   var newNode = document.createElement("canvas");
   newNode.id = id
-  newNode.setAttribute('width', "425");
-  newNode.setAttribute('height', "100");
-  newNode.style.border = "thin solid #000000";
-  
+  newNode.setAttribute('width', width);
+  newNode.setAttribute('height', height);
+  return newNode;
+}
+
+function createSectionCanvas(id, width, height) {
+  let newNode = createCanvasNode(id, width, height);
+  let main = document.getElementById("main");
   var lastCanvas = main.getElementsByTagName("canvas")[0];
   var parentDiv = lastCanvas.parentNode;
   
@@ -306,14 +297,9 @@ function createCanvas(id) {
   return newNode;
 }
 
-function createFooterCanvas(id) {
+function createFooterCanvas(id, width, height) {
+  let newNode = createCanvasNode(id, width, height);
   let main = document.getElementById("main");
-  var newNode = document.createElement("canvas");
-  newNode.id = id;
-  newNode.setAttribute('width', "425");
-  newNode.setAttribute('height', "25");
-  newNode.style.border = "thin solid #000000";
-  
   var allCanvas = main.getElementsByTagName("canvas");
   var lastCanvas = allCanvas[allCanvas.length -1];
   var parentDiv = lastCanvas.parentNode;
