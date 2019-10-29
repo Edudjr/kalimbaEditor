@@ -1,60 +1,56 @@
-class TabSection {
-  constructor(canvas, numberOfLines, numberOfRows) {
-    this.canvas = canvas;
-    this.numberOfLines = numberOfLines;
-    this.numberOfRows = numberOfRows;
-    
-    this.canvasHeight = canvas.offsetHeight;
-    this.canvasWidth = canvas.offsetWidth;
-    this.elementWidth = this.canvasWidth / numberOfRows;
-    this.elementHeight = this.elementWidth;
-    this.matrix = this._createMatrix();
-    this.ctx = canvas.getContext("2d");
-    
-    this._createMatrixOnCanvas();
-    this.that = this;
-    this.canvas.addEventListener('mousedown', this._canvasListener.bind(this));
+class CursorHelper {
+  static getCursorPosition(canvas, event) {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      return [x, y];
   }
-  
-  _canvasListener(e) {
-    let matrix = this.matrix;
-    let ctx = this.ctx;
-    let canvas = this.canvas;
-    let elementWidth = this.elementWidth;
-    let elementHeight = this.elementHeight;
-    
-    let position = getCursorPosition(canvas, e);
-    let coordinate = getCoordinatesFromPosition(position, elementWidth, elementHeight);
-    
-    this._selectPosition(coordinate, matrix);
-    this._clearCanvas();
-    this._createMatrixOnCanvas();
-  }
-  
-  _createMatrixOnCanvas() {
-    let xPosition = 0;
-    let yPosition = 0;
-    let ctx = this.ctx;
+}
 
-    for (let i = 0; i < this.numberOfLines; i++) {
-      for (let j = 0; j < this.numberOfRows; j++) {
-        createSquareAt(this.canvas, xPosition, yPosition, this.elementWidth, this.elementHeight);
-        colorRectBasedOnPosition(ctx, j, 3, "red");
-        xPosition += this.elementWidth;
-        
-        if (this.matrix[i][j] == 1) {
-          this._createCircleWithCoordinate([i,j]);
-        }
-      }
-      xPosition = 0;
-      yPosition += this.elementHeight;
-    }
+class CanvasDrawingHelper {
+  static createRect(canvas, x, y, width, height) {
+    let ctx = canvas.getContext("2d");
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.stroke();
   }
   
-  _createMatrix() {
-    let numberOfLines = this.numberOfLines;
-    let numberOfRows = this.numberOfRows;
-    
+  static fillRect(canvas, x, y, width, height, color) {
+    let ctx = canvas.getContext("2d");
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+  
+  static fillCircle(canvas, x, y, radius, color) {
+    let ctx = canvas.getContext("2d");
+    let elementWidth = this.elementWidth;
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+  
+  static clearCanvas(canvas) {
+    let ctx = canvas.getContext("2d");
+    let width = canvas.width;
+    let height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+  }
+  
+  static createTextAt(canvas, text, size, x, y, color) {
+    let ctx = canvas.getContext("2d");
+    ctx.fillStyle = color;
+    ctx.font = size+"px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(text, x, y);
+  }
+}
+
+class MatrixHelper {
+  static createMatrix(numberOfLines, numberOfRows) {
     let matrix = new Array(numberOfLines)
     for (let i = 0; i < matrix.length; i++) {
         matrix[i] = new Array(numberOfRows);
@@ -64,50 +60,145 @@ class TabSection {
     }  
     return matrix;
   }
+}
+
+class TabSectionUI {
+  constructor(canvas, tabSection) {
+    this.canvas = canvas;
+    this.tabSection = tabSection;
+    this.canvasHeight = canvas.offsetHeight;
+    this.canvasWidth = canvas.offsetWidth;
+    this.elementWidth = this.canvasWidth / tabSection.numberOfRows;
+    this.elementHeight = this.elementWidth;
+    this.ctx = canvas.getContext("2d");
+    
+    this._createMatrixOnCanvas();
+    this.canvas.addEventListener('mousedown', this._canvasListener.bind(this));
+  }
   
-  // _colorBasedOnPosition(rowNumber) {
-  //   let ctx = this.ctx;
-  //   let row = rowNumber + 1;
-  //   if (row % 3 == 0) {
-  //     ctx.fillStyle = "red";
-  //     ctx.fill();
-  //   }
-  // }
-  
-  _createCircleWithCoordinate(coordinateArray) {
+  _canvasListener(e) {
+    let matrix = this.tabSection.matrix;
+    let canvas = this.canvas;
+    let ctx = this.ctx;
     let elementWidth = this.elementWidth;
     let elementHeight = this.elementHeight;
-    let normalizedPosition = getNormalizedPositionFromCoordinate(coordinateArray, elementWidth, elementHeight);
+    
+    let coordinate = CursorHelper.getCursorPosition(canvas, e);
+    let x = coordinate[0];
+    let y = coordinate[1];
+    let lineRow = this._getLineRowFromXY(x, y);
+    
+    this.tabSection.selectPosition(lineRow, matrix);
+    CanvasDrawingHelper.clearCanvas(canvas);
+    this._createMatrixOnCanvas();
+  }
+  
+  _createMatrixOnCanvas() {
+    let xPosition = 0;
+    let yPosition = 0;
+    let ctx = this.ctx;
+    let numberOfLines = this.tabSection.numberOfLines;
+    let numberOfRows = this.tabSection.numberOfRows;
+    let canvas = this.canvas;
+    let elementWidth = this.elementWidth;
+    let elementHeight = this.elementHeight;
+    let matrix = this.tabSection.matrix;
+
+    for (let i = 0; i < numberOfLines; i++) {
+      for (let j = 0; j < numberOfRows; j++) {
+        this._createRect(xPosition, yPosition);
+        this._createRedRectBasedOnRow(xPosition, yPosition, j);
+        xPosition += elementWidth;
+        
+        let isPositionSelected = this.tabSection.isPositionSelected([i,j]);
+        if (isPositionSelected) {
+          this._createCircleFromPosition(i,j);
+        }
+      }
+      xPosition = 0;
+      yPosition += this.elementHeight;
+    }
+  }
+  
+  _createRect(x, y) {
+    let canvas = this.canvas;
+    let width = this.elementWidth;
+    let height = this.elementHeight;
+    CanvasDrawingHelper.createRect(canvas, x, y, width, height);
+  }
+  
+  // TODO: make this dependent on the tabSection or something else
+  _createRedRectBasedOnRow(x, y, rowNumber) {
+    let canvas = this.canvas;
+    let width = this.elementWidth;
+    let height = this.elementHeight;
+    let row = rowNumber + 1;
+    if (row % 3 == 0) {
+      CanvasDrawingHelper.fillRect(canvas, x, y, width, height, "red")
+    }
+  }
+  
+  _createCircleFromPosition(line, row) {
+    let elementWidth = this.elementWidth;
+    let elementHeight = this.elementHeight;
+    let minXY = this._getMinXYFromPosition(line, row, elementWidth, elementHeight);
     let xOffset = elementWidth/2;
     let yOffset = elementHeight/2;
-    let x = coordinateArray[0];
-    let y = coordinateArray[1];
-    let normalizedX = normalizedPosition[0] + xOffset;
-    let normalizedY = normalizedPosition[1] + yOffset;
+    let centeredX = minXY[0] + xOffset;
+    let centeredY = minXY[1] + yOffset;
     
-    this._createCircleAt(normalizedX, normalizedY);
+    this._createCircle(centeredX, centeredY);
   }
 
-  _createCircleAt(x, y) {
+  _createCircle(x, y) {
+    let canvas = this.canvas;
     let elementWidth = this.elementWidth;
-    let ctx = this.ctx;
     let modifier = 0.5;
     let elementRadius = elementWidth / 2 * modifier;
+    
+    CanvasDrawingHelper.fillCircle(canvas, x, y, elementRadius, "black");
+  }
+  
+  _getMinXYFromPosition(line, row, elementWidth, elementHeight) {
+    let y = line * elementHeight;
+    let x = row * elementWidth;
+    return [x, y];
+  }
+  
+  // TODO: create a helper for that - position things - based on the tabSection somehow
+  _getLineRowFromXY(x, y) {
+    let width = this.elementWidth;
+    let height = this.elementHeight;
+        
+    let currentX = width;
+    let currentY = height;
+    
+    let line = 0;
+    let row = 0;
+    
+    while (currentX < x) {
+      currentX += width;
+      row ++;
+    }
+    
+    while (currentY < y) {
+      currentY += height;
+      line ++;
+    }
+    
+    return [line, row];
+  }
+}
 
-    ctx.beginPath();
-    ctx.arc(x, y, elementRadius, 0, 2 * Math.PI);
-    ctx.fillStyle = "black";
-    ctx.fill();
+class TabSection {
+  constructor(numberOfLines, numberOfRows) {
+    this.numberOfLines = numberOfLines;
+    this.numberOfRows = numberOfRows;
+    this.matrix = MatrixHelper.createMatrix(numberOfLines, numberOfRows);
   }
   
-  _clearCanvas() {
-    let width = this.canvas.width;
-    let height = this.canvas.height;
-    let ctx = this.ctx;
-    ctx.clearRect(0, 0, width, height);
-  }
-  
-  _selectPosition(coordinateArray, matrix) {
+  selectPosition(coordinateArray) {
+    let matrix = this.matrix;
     let x = coordinateArray[0];
     let y = coordinateArray[1];
   
@@ -117,51 +208,61 @@ class TabSection {
       matrix[x][y] = 1;
     }
   }
+  
+  isPositionSelected(coordinateArray) {
+    let matrix = this.matrix;
+    let x = coordinateArray[0];
+    let y = coordinateArray[1];
+  
+    if (matrix[x][y] == 1) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }
 
 createSection();
 createFooterSection();
 
 var canvasId = 0;
-function createSection(sectionArray) {
+
+function createSection() {
   let canvas = createCanvas("myCanvas"+canvasId);
-  let section = new TabSection(canvas, 4, 17);
+  let tabSection = new TabSection(4, 17);
+  let tabSectionUI = new TabSectionUI(canvas, tabSection);
   canvasId++;
 }
 
 function createFooterSection() {
-  let footer = createFooterCanvas("footerCanvas");
+  // TODO: remove everything and do something like
+  // new TabSection(1, 17);
+  // new TabSectionUI(canvas, TabSection);
+  
+  let canvas = createFooterCanvas("footerCanvas");
   let numberOfRows = 17;
-  let width = height = footer.offsetWidth / numberOfRows;
-  let ctx = footer.getContext("2d");
+  let width = height = canvas.offsetWidth / numberOfRows;
+  let ctx = canvas.getContext("2d");
   let currentX = 0;
   let textOffsetX = width/2;
   let textOffsetY = height - 5;
-  
+
+  // Apply text to each square
   let notes = ['D','B','G','E','C','A','F','D','C','E','G','B','D','F','A','C','E'];
-  
   for (let i = 0; i < numberOfRows; i++) {
-    createSquareAt(footer, currentX, 0, width, height);
+    CanvasDrawingHelper.createRect(canvas, currentX, 0, width, height);
+    CanvasDrawingHelper.createRect(canvas, currentX, 0, width, height, "red");
     colorRectBasedOnPosition(ctx, i, 3, "red");
-    createTextAt(ctx, notes[i], 15, currentX + textOffsetX, textOffsetY);
+    CanvasDrawingHelper.createTextAt(canvas, notes[i], 15, currentX + textOffsetX, textOffsetY, "black");
     currentX += width;
   }
-}
-
-// POSITION AND DRAWINGS
-function createSquareAt(canvas, x, y, width, height) {
-  let ctx = canvas.getContext("2d");
   
-  ctx.beginPath();
-  ctx.rect(x, y, width, height);
-  ctx.stroke();
-}
-
-function colorRectBasedOnPosition(ctx, rowNumber, modNumber, color) {
-  let row = rowNumber + 1;
-  if (row % modNumber == 0) {
-    ctx.fillStyle = color;
-    ctx.fill();
+  function colorRectBasedOnPosition(ctx, rowNumber, modNumber, color) {
+    let row = rowNumber + 1;
+    if (row % modNumber == 0) {
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
   }
 }
 
@@ -188,39 +289,8 @@ function getCoordinatesFromPosition(positionArray, elementWidth, elementHeight) 
   return [line, row];
 }
 
-function getNormalizedPositionFromCoordinate(coordinateArray, elementWidth, elementHeight) {
-  let y = coordinateArray[0] * elementHeight;
-  let x = coordinateArray[1] * elementWidth;
-  
-  return [x, y];
-}
-
-function getCursorPosition(canvas, event) {
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    return [x, y];
-}
-
-function createMatrix() {
-    let line = new Array(4)
-    for (let i = 0; i < line.length; i++) {
-        line[i] = new Array(17);
-        for (let j = 0; j < line[i].length; j++) {
-            line[i][j] = 0;
-        }
-    }  
-    return line;
-}
-
-function createTextAt(ctx, text, size, x, y) {
-  ctx.fillStyle = "black";
-  ctx.font = size+"px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText(text, x, y);
-}
-
 // CANVAS CREATION
+// TODO: make canvas creation depend on tabSection or something else (lines and rows)
 function createCanvas(id) {
   let main = document.getElementById("main");
   var newNode = document.createElement("canvas");
