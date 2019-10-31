@@ -190,6 +190,44 @@ class TabSectionUI {
   }
 }
 
+class TabFooterSectionUI {
+  constructor(canvas, numberOfLines, numberOfRows, notesArray) {
+    this.canvas = canvas;
+    this.notesArray = notesArray;
+    this.numberOfLines = numberOfLines;
+    this.numberOfRows = numberOfRows; 
+    
+    this._createFooterSection();
+  }
+  
+  _createFooterSection() {
+    let canvas = this.canvas;
+    let lines = this.numberOfLines;
+    let rows = this.numberOfRows;
+    let squareSize = this.canvas.offsetWidth / this.numberOfRows;
+    let currentX = 0;
+    let textOffsetX = squareSize/2;
+    let textOffsetY = squareSize - 5;
+    let notes = this.notesArray;
+    
+    for (let i = 0; i < rows; i++) {
+      this._colorRectBasedOnPosition(canvas, currentX, 0, i, squareSize);
+      CanvasDrawingHelper.createRect(canvas, currentX, 0, squareSize, squareSize, "red");
+      CanvasDrawingHelper.createTextAt(canvas, notes[i], 15, currentX + textOffsetX, textOffsetY, "black");
+      currentX += squareSize;
+    }
+  }
+  
+  _colorRectBasedOnPosition(canvas, x, y, rowNumber, squareSize) {
+    let width = squareSize;
+    let height = squareSize;
+    let row = rowNumber + 1;
+    if (row % 3 == 0) {
+      CanvasDrawingHelper.fillRect(canvas, x, y, width, height, "red");
+    }
+  }
+}
+
 class TabSection {
   constructor(numberOfLines, numberOfRows) {
     this.numberOfLines = numberOfLines;
@@ -222,62 +260,64 @@ class TabSection {
   }
 }
 
-createSection();
-createFooterSection();
-
-var canvasId = 0;
-
-function createSection() {
-  let lines = 4;
-  let rows = 17;
-  let squareSize = 25;
-  let width = squareSize * rows;
-  let height = squareSize * lines;
-  let id = "myCanvas" + canvasId;
-  let canvas = createSectionCanvas(id, width, height);
-  let tabSection = new TabSection(lines, rows);
-  let tabSectionUI = new TabSectionUI(canvas, tabSection);
-  canvasId++;
+class Tablature {
+  constructor(numberOfLines, numberOfRows) {
+    this.numberOfLines = numberOfLines;
+    this.numberOfRows = numberOfRows;
+    this.sections = [];
+  }
+  
+  addSection() {
+    let lines = this.numberOfLines;
+    let rows = this.numberOfRows;
+    let tabSection = new TabSection(lines, rows);
+    this.sections.append(tabSection);
+  }
 }
 
-function createFooterSection() {
-  // TODO: remove everything and do something like
-  // new TabSection(1, 17);
-  // new TabSectionUI(canvas, TabSection);
-  let lines = 1;
-  let rows = 17;
-  let squareSize = 25;
-  let width = squareSize * rows;
-  let height = squareSize * lines;
+class TablatureController {
+  constructor() {
+    this.lastCanvasId = 0;
+    this.lines = 4;
+    this.rows = 17;
+    this.squareSize = 25;
+  }
   
-  let canvas = createFooterCanvas("footerCanvas", width, height);
-  let numberOfRows = 17;
+  createSection() {
+    let lines = this.lines;
+    let rows = this.rows;
+    let squareSize = this.squareSize;
+    let width = squareSize * rows;
+    let height = squareSize * lines;
+    let canvasId = ++this.lastCanvasId;
+    let id = "myCanvas" + canvasId;
+    let canvas = createSectionCanvas(id, width, height);
+    let tabSection = new TabSection(lines, rows);
+    let tabSectionUI = new TabSectionUI(canvas, tabSection);
+  }
   
-  let ctx = canvas.getContext("2d");
-  let currentX = 0;
-  let textOffsetX = squareSize/2;
-  let textOffsetY = squareSize - 5;
+  createFooter() {
+    let notes = ['D','B','G','E','C','A','F','D','C','E','G','B','D','F','A','C','E'];
+    let lines = this.lines;
+    let rows = this.rows;
+    let squareSize = this.squareSize;
+    let width = squareSize * rows;
+    let height = squareSize * lines;
+    let canvasId = ++this.lastCanvasId;
+    let id = "myCanvas" + canvasId;
+    let canvas = createSectionCanvas(id, width, height);
+    let tabFooterSectionUI = new TabFooterSectionUI(canvas, lines, rows, notes);
+  }
+}
 
-  // Apply text to each square
-  let notes = ['D','B','G','E','C','A','F','D','C','E','G','B','D','F','A','C','E'];
-  for (let i = 0; i < numberOfRows; i++) {
-    colorRectBasedOnPosition(canvas, currentX, 0, i, squareSize);
-    CanvasDrawingHelper.createRect(canvas, currentX, 0, squareSize, height, "red");
-    CanvasDrawingHelper.createTextAt(canvas, notes[i], 15, currentX + textOffsetX, textOffsetY, "black");
-    currentX += squareSize;
-  }
-  
-  function colorRectBasedOnPosition(canvas, x, y, rowNumber, squareSize) {
-    let width = height = squareSize;
-    let row = rowNumber + 1;
-    if (row % 3 == 0) {
-      CanvasDrawingHelper.fillRect(canvas, x, y, width, height, "red");
-    }
-  }
+let tablatureController = new TablatureController();
+tablatureController.createFooter();
+
+function createSection() {
+  tablatureController.createSection();
 }
 
 // CANVAS CREATION
-// TODO: make canvas creation depend on tabSection or something else (lines and rows)
 function createCanvasNode(id, width, height) {
   let main = document.getElementById("main");
   var newNode = document.createElement("canvas");
