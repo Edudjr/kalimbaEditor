@@ -1,11 +1,21 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+    <script src="/javascripts/player.js"></script>
   </head>
   <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
+    <p>Welcome: <%= title %></p>
+    <h2>Kalimba Editor</h2>
+
+    <div id="main" style="width: 425px;">
+      <div>
+        <button onclick="createSection()">Add section</button>
+        <button onclick="saveToFile()">Save</button>
+      </div>
+      <div style="height: 10px;"></div>
+      <canvas style="height: 0px; position: absolute"></canvas>
+      <!-- <p>The DOM is very useful.</p> -->
+    </div>
   </body>
 </html>

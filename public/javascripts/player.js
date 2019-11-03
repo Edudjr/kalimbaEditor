@@ -349,14 +349,6 @@ class CanvasHelper {
 }
 
 let tablatureController = new TablatureController(4,17);
-tablatureController.createFooter();
-tablatureController.createSection();
-
-// var stringObj = JSON.stringify(tablatureController);
-// console.log(stringObj);
-// var parsedObj = JSON.parse(stringObj);
-// console.log(parsedObj);
-
 function createSection() {
   tablatureController.createSection();
 }
@@ -364,4 +356,11 @@ function createSection() {
 function saveToFile() {
   tablatureController.saveToFile();
 }
+
+// Wait until page is fully loaded
+window.addEventListener('load', function () {
+  tablatureController.createFooter();
+  tablatureController.createSection();
+})
+
 
