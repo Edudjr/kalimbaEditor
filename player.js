@@ -307,6 +307,23 @@ class TablatureController {
     let canvas = CanvasHelper.createSectionCanvas(id, width, height);
     let tabFooterSectionUI = new TabFooterSectionUI(canvas, lines, rows, notes);
   }
+  
+  saveToFile() {
+    let filename = 'tablature.json'
+    let text = JSON.stringify(this.tablature);
+    var pom = document.createElement('a');
+    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    pom.setAttribute('download', filename);
+
+    if (document.createEvent) {
+        var event = document.createEvent('MouseEvents');
+        event.initEvent('click', true, true);
+        pom.dispatchEvent(event);
+    }
+    else {
+        pom.click();
+    }
+  }
 }
 
 // CANVAS CREATION
@@ -335,7 +352,16 @@ let tablatureController = new TablatureController(4,17);
 tablatureController.createFooter();
 tablatureController.createSection();
 
+// var stringObj = JSON.stringify(tablatureController);
+// console.log(stringObj);
+// var parsedObj = JSON.parse(stringObj);
+// console.log(parsedObj);
+
 function createSection() {
   tablatureController.createSection();
+}
+
+function saveToFile() {
+  tablatureController.saveToFile();
 }
 
