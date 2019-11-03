@@ -267,20 +267,18 @@ class Tablature {
     this.sections = [];
   }
   
-  addSection() {
-    let lines = this.numberOfLines;
-    let rows = this.numberOfRows;
-    let tabSection = new TabSection(lines, rows);
-    this.sections.append(tabSection);
+  addSection(tabSection) {
+    this.sections.push(tabSection);
   }
 }
 
 class TablatureController {
-  constructor() {
+  constructor(lines, rows) {
     this.lastCanvasId = 0;
-    this.lines = 4;
-    this.rows = 17;
+    this.lines = lines;
+    this.rows = rows;
     this.squareSize = 25;
+    this.tablature = new Tablature(this.lines, this.rows);
   }
   
   createSection() {
@@ -291,9 +289,10 @@ class TablatureController {
     let height = squareSize * lines;
     let canvasId = ++this.lastCanvasId;
     let id = "myCanvas" + canvasId;
-    let canvas = createSectionCanvas(id, width, height);
+    let canvas = CanvasHelper.createSectionCanvas(id, width, height);
     let tabSection = new TabSection(lines, rows);
     let tabSectionUI = new TabSectionUI(canvas, tabSection);
+    this.tablature.addSection(tabSection);
   }
   
   createFooter() {
@@ -305,45 +304,38 @@ class TablatureController {
     let height = squareSize * lines;
     let canvasId = ++this.lastCanvasId;
     let id = "myCanvas" + canvasId;
-    let canvas = createSectionCanvas(id, width, height);
+    let canvas = CanvasHelper.createSectionCanvas(id, width, height);
     let tabFooterSectionUI = new TabFooterSectionUI(canvas, lines, rows, notes);
   }
 }
 
-let tablatureController = new TablatureController();
+// CANVAS CREATION
+class CanvasHelper {
+  static createCanvasNode(id, width, height) {
+    let main = document.getElementById("main");
+    var newNode = document.createElement("canvas");
+    newNode.id = id
+    newNode.setAttribute('width', width);
+    newNode.setAttribute('height', height);
+    return newNode;
+  }
+  
+  static createSectionCanvas(id, width, height) {
+    let newNode = CanvasHelper.createCanvasNode(id, width, height);
+    let main = document.getElementById("main");
+    var lastCanvas = main.getElementsByTagName("canvas")[0];
+    var parentDiv = lastCanvas.parentNode;
+    
+    parentDiv.insertBefore(newNode, lastCanvas);
+    return newNode;
+  }
+}
+
+let tablatureController = new TablatureController(4,17);
 tablatureController.createFooter();
+tablatureController.createSection();
 
 function createSection() {
   tablatureController.createSection();
 }
 
-// CANVAS CREATION
-function createCanvasNode(id, width, height) {
-  let main = document.getElementById("main");
-  var newNode = document.createElement("canvas");
-  newNode.id = id
-  newNode.setAttribute('width', width);
-  newNode.setAttribute('height', height);
-  return newNode;
-}
-
-function createSectionCanvas(id, width, height) {
-  let newNode = createCanvasNode(id, width, height);
-  let main = document.getElementById("main");
-  var lastCanvas = main.getElementsByTagName("canvas")[0];
-  var parentDiv = lastCanvas.parentNode;
-  
-  parentDiv.insertBefore(newNode, lastCanvas);
-  return newNode;
-}
-
-function createFooterCanvas(id, width, height) {
-  let newNode = createCanvasNode(id, width, height);
-  let main = document.getElementById("main");
-  var allCanvas = main.getElementsByTagName("canvas");
-  var lastCanvas = allCanvas[allCanvas.length -1];
-  var parentDiv = lastCanvas.parentNode;
-  
-  parentDiv.insertBefore(newNode, lastCanvas.nextSibling);
-  return newNode;
-}
