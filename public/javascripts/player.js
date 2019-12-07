@@ -348,6 +348,7 @@ class CanvasHelper {
   }
 }
 
+// MAIN
 let tablatureController = new TablatureController(4,17);
 function createSection() {
   tablatureController.createSection();
@@ -357,10 +358,22 @@ function saveToFile() {
   tablatureController.saveToFile();
 }
 
+function readFile (evt) {
+    var files = evt.target.files;
+    var file = files[0];           
+    var reader = new FileReader();
+    reader.onload = function(event) {
+      console.log(event.target.result);            
+    }
+    reader.readAsText(file)
+ }
+
 // Wait until page is fully loaded
 window.addEventListener('load', function () {
   tablatureController.createFooter();
   tablatureController.createSection();
+  tablatureController.loadFromFile();
+  document.getElementById('file').addEventListener('change', readFile, false);
 })
 
 
