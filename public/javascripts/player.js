@@ -235,6 +235,17 @@ class TabSection {
     this.matrix = MatrixHelper.createMatrix(numberOfLines, numberOfRows);
   }
   
+  loadMatrix(matrix) {
+      for (var i=0; i < matrix.length; i ++) {
+        for (var j=0; j < matrix[i].length; j ++) {
+          if (matrix[i][j] == 1) {
+            this.selectPosition([i,j]);
+          }
+        }
+      }
+      console.log(this.matrix);
+  }
+  
   selectPosition(coordinateArray) {
     let matrix = this.matrix;
     let x = coordinateArray[0];
@@ -279,6 +290,21 @@ class TablatureController {
     this.rows = rows;
     this.squareSize = 25;
     this.tablature = new Tablature(this.lines, this.rows);
+  }
+  
+  loadSection(section) {
+    let lines = section.numberOfLines;
+    let rows = section.numberOfRows;
+    let squareSize = this.squareSize;
+    let width = squareSize * rows;
+    let height = squareSize * lines;
+    let canvasId = ++this.lastCanvasId;
+    let id = "myCanvas" + canvasId;
+    let canvas = CanvasHelper.createSectionCanvas(id, width, height);
+    let tabSection = new TabSection(lines, rows);
+    tabSection.loadMatrix(section.matrix);
+    let tabSectionUI = new TabSectionUI(canvas, tabSection);
+    this.tablature.addSection(tabSection);
   }
   
   createSection() {
@@ -339,6 +365,7 @@ class CanvasHelper {
   
   static createSectionCanvas(id, width, height) {
     let newNode = CanvasHelper.createCanvasNode(id, width, height);
+    newNode.setAttribute('class', 'section');
     let main = document.getElementById("main");
     var lastCanvas = main.getElementsByTagName("canvas")[0];
     var parentDiv = lastCanvas.parentNode;
@@ -346,12 +373,27 @@ class CanvasHelper {
     parentDiv.insertBefore(newNode, lastCanvas);
     return newNode;
   }
+  
+  static clearCanvas() {
+    var elements = document.getElementsByClassName("section");
+    while(elements.length > 0){
+        elements[0].parentNode.removeChild(elements[0]);
+    }
+  }
 }
 
 // MAIN
-let tablatureController = new TablatureController(4,17);
-function createSection() {
-  tablatureController.createSection();
+var trablatureController;
+
+function loadJsonTablature(json) {
+  CanvasHelper.clearCanvas();
+  let lines = json.numberOfLines;
+  let rows = json.numberOfRows;
+  tablatureController = new TablatureController(lines,rows);
+  tablatureController.createFooter();
+  json.sections.forEach(function(section) {
+    tablatureController.loadSection(section);
+  });
 }
 
 function saveToFile() {
@@ -363,16 +405,21 @@ function readFile (evt) {
     var file = files[0];           
     var reader = new FileReader();
     reader.onload = function(event) {
-      console.log(event.target.result);            
+      var json = JSON.parse(event.target.result);
+      loadJsonTablature(json);
     }
     reader.readAsText(file)
+ }
+ 
+ function newTablature() {
+   tablatureController = new TablatureController(4,17);
+   tablatureController.createFooter();
+   tablatureController.createSection();
  }
 
 // Wait until page is fully loaded
 window.addEventListener('load', function () {
-  tablatureController.createFooter();
-  tablatureController.createSection();
-  tablatureController.loadFromFile();
+  newTablature();
   document.getElementById('file').addEventListener('change', readFile, false);
 })
 
