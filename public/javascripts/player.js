@@ -63,10 +63,9 @@ class MatrixHelper {
 }
 
 class TabSectionUI {
-  constructor(canvas, tabSection, audioFilesArray) {
+  constructor(canvas, tabSection) {
     this.canvas = canvas;
     this.tabSection = tabSection;
-    this.audioFilesArray = audioFilesArray;
     this.canvasHeight = canvas.offsetHeight;
     this.canvasWidth = canvas.offsetWidth;
     this.elementWidth = this.canvasWidth / tabSection.numberOfRows;
@@ -91,7 +90,7 @@ class TabSectionUI {
     
     this.tabSection.selectPosition(lineRow);
     CanvasDrawingHelper.clearCanvas(canvas);
-    AudioHelper.playAudio(lineRow[1], this.audioFilesArray);
+    AudioHelper.playAudio(lineRow[1]);
     this._createMatrixOnCanvas();
   }
   
@@ -286,7 +285,7 @@ class Tablature {
 }
 
 class TablatureController {
-  constructor(lines, rows, audioFilesArray) {
+  constructor(lines, rows) {
     this.lastCanvasId = 0;
     this.lines = lines;
     this.rows = rows;
@@ -305,7 +304,7 @@ class TablatureController {
     let canvas = CanvasHelper.createSectionCanvas(id, width, height);
     let tabSection = new TabSection(lines, rows);
     tabSection.loadMatrix(section.matrix);
-    let tabSectionUI = new TabSectionUI(canvas, tabSection, audioFilesArray);
+    let tabSectionUI = new TabSectionUI(canvas, tabSection);
     this.tablature.addSection(tabSection);
   }
   
@@ -319,7 +318,7 @@ class TablatureController {
     let id = "myCanvas" + canvasId;
     let canvas = CanvasHelper.createSectionCanvas(id, width, height);
     let tabSection = new TabSection(lines, rows);
-    let tabSectionUI = new TabSectionUI(canvas, tabSection, audioFilesArray);
+    let tabSectionUI = new TabSectionUI(canvas, tabSection);
     this.tablature.addSection(tabSection);
   }
   
@@ -386,30 +385,25 @@ class CanvasHelper {
 
 // AUDIO Player
 class AudioHelper {
-  static loadAudioFiles(array) {
+  static playAudio(row) {
+    console.log(row);
     var notes = ['D2oo','B7o','G5o','E3o','C1o','A6','F4','D2','C1','E3','G5','B7','D2o','F4o','A6o','C1oo','E3oo'];
     var root = '../kalimba/';
-    
-    notes.forEach(function(note){
-      var fileName = root+note+'.mp3';
-      array.push(new Audio(fileName));
-    });
-  }
-  
-  static playAudio(row, audioFiles) {
-    audioFiles[row].play();
+    var name = notes[row];
+    var fileName = root+name+'.mp3';
+    new Audio(fileName).play();
+    // new Audio('../kalimba/C1.mp3').play()
   }
 }
 
 // MAIN
 var trablatureController;
-var audioFilesArray = [];
 
 function loadJsonTablature(json) {
   CanvasHelper.clearCanvas();
   let lines = json.numberOfLines;
   let rows = json.numberOfRows;
-  tablatureController = new TablatureController(lines,rows, audioFilesArray);
+  tablatureController = new TablatureController(lines,rows);
   tablatureController.createFooter();
   json.sections.forEach(function(section) {
     tablatureController.loadSection(section);
@@ -432,14 +426,13 @@ function readFile (evt) {
  }
  
  function newTablature() {
-   tablatureController = new TablatureController(4,17, audioFilesArray);
+   tablatureController = new TablatureController(4,17);
    tablatureController.createFooter();
    tablatureController.createSection();
  }
 
 // Wait until page is fully loaded
 window.addEventListener('load', function () {
-  AudioHelper.loadAudioFiles(audioFilesArray);
   newTablature();
   document.getElementById('file').addEventListener('change', readFile, false);
 })
