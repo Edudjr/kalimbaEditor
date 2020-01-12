@@ -397,8 +397,6 @@ class AudioHelper {
   }
   
   static playAudio(row, audioFiles) {
-    audioFiles[row].pause();
-    audioFiles[row].currentTime = 0;
     audioFiles[row].play();
   }
 }
