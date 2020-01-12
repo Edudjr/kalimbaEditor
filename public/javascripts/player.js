@@ -88,8 +88,9 @@ class TabSectionUI {
     let y = coordinate[1];
     let lineRow = this._getLineRowFromXY(x, y);
     
-    this.tabSection.selectPosition(lineRow, matrix);
+    this.tabSection.selectPosition(lineRow);
     CanvasDrawingHelper.clearCanvas(canvas);
+    AudioHelper.playAudio(lineRow[1]);
     this._createMatrixOnCanvas();
   }
   
@@ -379,6 +380,19 @@ class CanvasHelper {
     while(elements.length > 0){
         elements[0].parentNode.removeChild(elements[0]);
     }
+  }
+}
+
+// AUDIO Player
+class AudioHelper {
+  static playAudio(row) {
+    console.log(row);
+    var notes = ['D2oo','B7o','G5o','E3o','C1o','A6','F4','D2','C1','E3','G5','B7','D2o','F4o','A6o','C1oo','E3oo'];
+    var root = '../kalimba/';
+    var name = notes[row];
+    var fileName = root+name+'.mp3';
+    new Audio(fileName).play();
+    // new Audio('../kalimba/C1.mp3').play()
   }
 }
 
